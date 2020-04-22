@@ -55,14 +55,14 @@ jobs:
       - store_artifacts:
           path: reports/junit
 
-  bundle: 
+  build: 
     docker: *nodejs-docker-image
     steps:
       - checkout
       - *restore_cache
       - run:
-          name: Bundle
-          command: npm run bundle
+          name: build
+          command: npm run build
 
   publish: 
     docker: *nodejs-docker-image
@@ -84,10 +84,10 @@ workflows:
       - unit-tests:
           requires:
             - setup
-      - bundle:
+      - build:
           requires:
             - tslint-and-format
             - unit-tests
       - publish:
           requires:
-            - bundle
+            - build

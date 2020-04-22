@@ -13,17 +13,12 @@ type TemplateDoc<T> = { [key in keyof T]: (...params: any[]) => string }
 
 /** Create documentation for a compilation result */
 export function createDoc(result: CompilationResult) {
-  return Object
-    .keys(result.contracts)
-    .reduce((acc, fileName) => {
-      const contracts = result.contracts[fileName]
-      Object
-        .keys(contracts)
-        .forEach(name => acc[name] = getContractDoc(name, contracts[name]))
-      return acc
-    }, {})
+  return Object.keys(result.contracts).reduce((acc, fileName) => {
+    const contracts = result.contracts[fileName]
+    Object.keys(contracts).forEach((name) => (acc[name] = getContractDoc(name, contracts[name])))
+    return acc
+  }, {})
 }
-
 
 //////////////
 // CONTRACT //
@@ -45,26 +40,28 @@ function getContractDoc(name: string, contract: CompiledContract) {
   const methods = { ...contract.userdoc.methods, ...contract.devdoc.methods }
   const contractDoc = { ...contract.userdoc, ...contract.devdoc, methods }
 
-  const methodsDoc = contract.abi.map((def: FunctionDescription) => {
-    if (def.type === 'constructor') {
-      def.name = 'constructor'
-      // because "constructor" is a string and not a { notice } object for userdoc we need to do that
-      const methodDoc = {
-        ...(contract.devdoc.methods.constructor || {}),
-        notice: contract.userdoc.methods.constructor as string
+  const methodsDoc = contract.abi
+    .map((def: FunctionDescription) => {
+      if (def.type === 'constructor') {
+        def.name = 'constructor'
+        // because "constructor" is a string and not a { notice } object for userdoc we need to do that
+        const methodDoc = {
+          ...(contract.devdoc.methods.constructor || {}),
+          notice: contract.userdoc.methods.constructor as string
+        }
+        return getMethodDoc(def, methodDoc)
+      } else {
+        if (def.type === 'fallback') def.name = 'fallback'
+        const method = Object.keys(contractDoc.methods).find((key) => key.includes(def.name))
+        const methodDoc = contractDoc.methods[method]
+        return getMethodDoc(def, methodDoc)
       }
-      return getMethodDoc(def, methodDoc)
-    } else {
-      if (def.type === 'fallback') def.name = 'fallback'
-      const method = Object.keys(contractDoc.methods).find(key => key.includes(def.name))
-      const methodDoc = contractDoc.methods[method]
-      return getMethodDoc(def, methodDoc)
-    }
-  }).join('\n')
+    })
+    .join('\n')
 
   const doc = Object.keys(contractDoc)
-    .filter(key => key !== 'methods')
-    .map(key => contractDocTemplate[key](contractDoc[key]))
+    .filter((key) => key !== 'methods')
+    .map((key) => contractDocTemplate[key](contractDoc[key]))
     .join('\n')
 
   return `# ${name}\n${doc}\n${methodsDoc}`
@@ -82,26 +79,28 @@ const devMethodDocTemplate: TemplateDoc<MethodDoc> = {
   return: (value: string) => `Return : ${value}`,
   notice: (notice: string) => notice,
   returns: () => '', // Implemented by getParams()
-  params: () => '', // Implemented by getParams()
+  params: () => '' // Implemented by getParams()
 }
 
 /** Create a table of param */
-const getParams = (params: string[]) => (params.length === 0)
-  ? '_No parameters_'
-  : `|name |type |description
+const getParams = (params: string[]) =>
+  params.length === 0
+    ? '_No parameters_'
+    : `|name |type |description
 |-----|-----|-----------
 ${params.join('\n')}`
 
 /** Get the details of a method */
-const getMethodDetails = (devMethod: Partial<MethodDoc>) => !devMethod
-  ? '**Add Documentation for the method here**'
-  : Object.keys(devMethod)
-    .filter(key => key !== 'params')
-    .map(key => devMethodDocTemplate[key](devMethod[key]))
-    .join('\n')
+const getMethodDetails = (devMethod: Partial<MethodDoc>) =>
+  !devMethod
+    ? '**Add Documentation for the method here**'
+    : Object.keys(devMethod)
+        .filter((key) => key !== 'params')
+        .map((key) => devMethodDocTemplate[key](devMethod[key]))
+        .join('\n')
 
 function extractParams(params: ABIParameter[], devparams: any) {
-  return params.map(input => {
+  return params.map((input) => {
     const description = devparams[input.name] || ''
     return `|${input.name}|${input.type}|${description}`
   })
@@ -118,5 +117,3 @@ ${getParams(params)}
 ${getMethodDetails(devdoc)}
 ${`Returns:\n${getParams(returns)}`}`
 }
-
-

@@ -16,7 +16,6 @@ interface AlertMap {
 
 @customElement('eth-doc')
 export class EthdocComponent extends LitElement {
-
   /** client to communicate with the IDE */
   private client = createIframeClient()
   private docs: ContractMap = {}
@@ -28,22 +27,20 @@ export class EthdocComponent extends LitElement {
   }
 
   async init() {
-    console.log("Initializing")
+    console.log('Initializing')
     await this.client.onload()
-    console.log("Initialized")
-    this.client.solidity.on('compilationFinished', (
-      file: string,
-      src: CompilationFileSources,
-      version: string,
-      result: CompilationResult,
-    ) => {
-      console.log("Compilation finished from Eth Doc", result, JSON.stringify(result))
-      if (!result) return
-      this.docs = createDoc(result)
-      const status: Status = { key: 'succeed', type: 'success', title: 'New documentation ready'}
-      this.client.emit('statusChanged', status)
-      this.requestUpdate()
-    })
+    console.log('Initialized')
+    this.client.solidity.on(
+      'compilationFinished',
+      (file: string, src: CompilationFileSources, version: string, result: CompilationResult) => {
+        console.log('Compilation finished from Eth Doc', result, JSON.stringify(result))
+        if (!result) return
+        this.docs = createDoc(result)
+        const status: Status = { key: 'succeed', type: 'success', title: 'New documentation ready' }
+        this.client.emit('statusChanged', status)
+        this.requestUpdate()
+      }
+    )
   }
 
   /** ⚠️ If you're using LitElement you should disable Shadow Root ⚠️ */
@@ -78,36 +75,31 @@ export class EthdocComponent extends LitElement {
   }
 
   render() {
-    const contracts = Object
-      .keys(this.docs)
-      .map(name => html`
-      <button
-        class="list-group-item list-group-item-action"
-        @click="${() => this.writeDoc(name)}">
+    const contracts = Object.keys(this.docs).map(
+      (name) => html` <button class="list-group-item list-group-item-action" @click="${() => this.writeDoc(name)}">
         ${name} Documentation
       </button>`
-      )
+    )
 
-    const docAlerts = Object
-      .keys(this.docAlerts)
-      .map(key => this.docAlerts[key])
+    const docAlerts = Object.keys(this.docAlerts)
+      .map((key) => this.docAlerts[key])
       .map(({ type, message }) => {
-        return html`
-        <div class="alert alert-${type}" role="alert">
+        return html` <div class="alert alert-${type}" role="alert">
           ${message}
         </div>`
       })
 
-    const info = Object.keys(this.docs).length === 0
-      ? html`<p>Compile a contract with Solidity Compiler.</p>`
-      : html`<p>Click on a contract to generate documentation.</p>`
+    const info =
+      Object.keys(this.docs).length === 0
+        ? html`<p>Compile a contract with Solidity Compiler.</p>`
+        : html`<p>Click on a contract to generate documentation.</p>`
 
     return html`
       <style>
         main {
           padding: 10px;
         }
-        #alerts{
+        #alerts {
           margin-top: 20px;
           font-size: 0.8rem;
         }
@@ -131,7 +123,7 @@ export class EthdocComponent extends LitElement {
           ${contracts}
         </div>
         <div id="alerts">
-        ${docAlerts}
+          ${docAlerts}
         </div>
       </main>
     `
