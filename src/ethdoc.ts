@@ -42,13 +42,13 @@ const contractDocTemplate: TemplateDoc<ContractDoc> = {
 
 /** Create the documentation for a contract */
 function getContractDoc(name: string, contract: CompiledContract) {
-  const methods = {...contract.userdoc.methods, ...contract.devdoc.methods }
+  const methods = { ...contract.userdoc.methods, ...contract.devdoc.methods }
   const contractDoc = { ...contract.userdoc, ...contract.devdoc, methods }
 
   const methodsDoc = contract.abi.map((def: FunctionDescription) => {
     if (def.type === 'constructor') {
       def.name = 'constructor'
-       // because "constructor" is a string and not a { notice } object for userdoc we need to do that
+      // because "constructor" is a string and not a { notice } object for userdoc we need to do that
       const methodDoc = {
         ...(contract.devdoc.methods.constructor || {}),
         notice: contract.userdoc.methods.constructor as string
@@ -57,7 +57,7 @@ function getContractDoc(name: string, contract: CompiledContract) {
     } else {
       if (def.type === 'fallback') def.name = 'fallback'
       const method = Object.keys(contractDoc.methods).find(key => key.includes(def.name))
-      const methodDoc =  contractDoc.methods[method]
+      const methodDoc = contractDoc.methods[method]
       return getMethodDoc(def, methodDoc)
     }
   }).join('\n')
@@ -110,8 +110,8 @@ function extractParams(params: ABIParameter[], devparams: any) {
 function getMethodDoc(def: FunctionDescription, devdoc?: Partial<MethodDoc>) {
   const doc = devdoc || {}
   const devparams = doc.params || {}
-  const params = extractParams(def.inputs, devparams)
-  const returns = extractParams(def.outputs, devparams)
+  const params = extractParams(def.inputs || [], devparams)
+  const returns = extractParams(def.outputs || [], devparams)
   return `
 ## ${def.name} - ${def.constant ? 'view' : 'read'}
 ${getParams(params)}
