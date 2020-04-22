@@ -89,9 +89,9 @@ workflows:
             - tslint-and-format
             - unit-tests
       - publish:
-        context: SolidStudio
-        requires:
-          - build
-        filters:
-          branches:
-            only: master
+          context: SolidStudio
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
