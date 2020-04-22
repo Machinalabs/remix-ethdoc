@@ -2,7 +2,7 @@ version: 2.0
 
 aliases:
   - &nodejs-docker-image
-    - image: circleci/node:8.12.0
+    - image: circleci/node:12.13.1
   
   - &restore_cache
     restore_cache:
@@ -47,7 +47,7 @@ jobs:
       - *restore_cache
       - run:
           name: Run unit tests with JUnit as reporter
-          command: npm run test:ci
+          command: npm run test 
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
